@@ -1,16 +1,6 @@
 ```
----
-title: Home
----
-
-# Test
-# Test
-# Test
-
+---title: Home---
 # ZombieRollz Blog
-
 Writeups and notes.
-
-## HTB Sherlock- 
-- [Brutus](./htb-sherlock/brutus)
+## HTB Sherlock- [Brutus](./HTB Sherlock/Brutus)
 ```
