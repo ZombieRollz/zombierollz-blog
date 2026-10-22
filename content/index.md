@@ -1,6 +1,6 @@
 ```
 ---
-title: Home
+title: Homepage
 ---
 # ZombieRollz Blog
 Writeups and notes.
