@@ -3,7 +3,7 @@
 title: Homepage
 ---
 
-# ZombieRollz Blog
+#ZombieRollz Blog
 
 Writeups and notes.
 ```
