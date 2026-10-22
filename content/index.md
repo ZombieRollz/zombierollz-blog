@@ -2,4 +2,9 @@
 title: Home
 ---
 
-Welcome to my blog.
+# ZombieRollz Blog
+
+Writeups and notes.
+
+## HTB Sherlock- 
+- [Brutus](./htb-sherlock/brutus)
