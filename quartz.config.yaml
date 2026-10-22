@@ -7,7 +7,7 @@ configuration:
   analytics:
     provider: plausible
   locale: en-US
-  baseUrl: ZombieRollz.github.io/zombierollz-blog
+  baseUrl: "https://ZombieRollz.github.io/zombierollz-blog"
   ignorePatterns:
     - private
     - templates
