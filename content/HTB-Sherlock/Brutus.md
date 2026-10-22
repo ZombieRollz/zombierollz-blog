@@ -1,21 +1,18 @@
 
-### Scenario
+## Scenario
 
+A brute-force attack hit an SSH service, and the attacker eventually guessed the `root` password. After logging in interactively, they established a shell session, created a new local user for persistence, added that user to the sudo group, and then used elevated privileges to download a script from GitHub for further activity.
 
-In this Sherlock, I combed through the auth.log and wtmp logs. The user used brute-force via ssh. 
-
-###### Artificats provided
+## Artificats provided
 
 Via `sha256sum Brutus.zip`, dd7742375a19b6ccc4323058224460a5220c43d4e9f7565b653bd369b8c46b2d 
 
-###### Skills learned
+## Skills learned
 
 - Unix Log Analysis
 - wtmp analysis
 
-More details of the above below...
-
-##### Initial Analysis
+## Initial Analysis
 
 The two artifacts that are provided are the auth logs and WTMP output. 
 
@@ -28,7 +25,7 @@ The two artifacts that are provided are the auth logs and WTMP output.
 		- `last -f /var/log/wtmp`
 
 
-###### Tools utilized
+## Tools utilized
 
 - 7z
 - python3
@@ -52,14 +49,14 @@ python3 utmp.py -o wtmp.out wtmp
 ![[Pasted image 20261022120158.png]]
 
 ![[Pasted image 20261022120159.png]]
-###### Analyzing auth.log
+## Analyzing auth.log
 
 When using the cat command against the auth.logs, a lot of information is given. 
 
 ![[Pasted image 20261022120209.png]]
 
-
-1. **Analyze the auth.log. What is the IP address used by the attacker to carry out a brute force attack?**
+#### Question 1
+**Analyze the auth.log. What is the IP address used by the attacker to carry out a brute force attack?**
 
 To identify for brute force attacker's IP address, I analyzed the auth.log for repeated failed authentication attempts using the following commands:
 
@@ -80,28 +77,28 @@ Step 3 command:
 3. Counts occurrences of each IP
 4. Sorts by frequency to identify the source of the brute force attack
 
-Result:
+**Result**:
 
 ![[Pasted image 20261022120222.png]]
 
-
-2. **The bruteforce attempts were successful and attacker gained access to an account on the server. What is the username of the account?**
+#### Question 2
+**The bruteforce attempts were successful and attacker gained access to an account on the server. What is the username of the account?**
    
 **Methodology**:
 To identify successful authentications from the attacker's IP(65.2.161.68), I searched for "Accepted password" entries in auth.log and filtered by the attacker's IP.
 
 grep "Accepted password" auth.log | grep "65.2.161.68" | grep -oP '(?<=for )\S+' | sort | uniq -c | sort -rn
 
-Result: 
+**Result**: 
 2 root
 1 cyberjunkie
 
-Answer: root
+**Answer**: root
 
-Analysis: The root account shows 2 successful authentications from the attacker's IP address, indicating successful compromise of the most privileged user account on the system. This gives the attack unrestricted admin access. Bruteforcing tools are a software program or script designed to attempt all possible combinations of characters or values to find a correction solution, typically used in the context of password cracking or cryptography. An example of bruteforcing tools: Brutus!
+**Analysis**: The root account shows 2 successful authentications from the attacker's IP address, indicating successful compromise of the most privileged user account on the system. This gives the attack unrestricted admin access. Bruteforcing tools are a software program or script designed to attempt all possible combinations of characters or values to find a correction solution, typically used in the context of password cracking or cryptography. An example of bruteforcing tools: Brutus!
 
-
-3. **Identify the UTC timestamp when the attacker logged in manually to the server and established a terminal session to carry out their objectives. The login time will be different than the authentication time, and can be found in the wtmp artifact.**
+#### Question 3
+**Identify the UTC timestamp when the attacker logged in manually to the server and established a terminal session to carry out their objectives. The login time will be different than the authentication time, and can be found in the wtmp artifact.**
    
 
 We see the authentication time for 06:32:44, but the question guides us to the wtmp artifact. The wtmp artifact will provide a time when the attacker had an interactive terminal connected. Entries in the wtmp record provider records of the creation and destruction of terminals, as well as the assignment and release of terminals to users. 
@@ -134,7 +131,9 @@ Answer: 2024-03-06 06:32:45
 
 Note: The original wtmp file was created in a timezone 6 hours behind UTC. After conversion to UTC format (hyphens, adjusted time): 2024-03-06 06:32:45
 
-4. **SSH login sessions are tracked and assigned a session number upon login. What is the session number assigned to the attacker's session for the user account from Question 2?**
+
+#### Question 4
+**SSH login sessions are tracked and assigned a session number upon login. What is the session number assigned to the attacker's session for the user account from Question 2?**
    
 
 *Methodology*:
@@ -158,8 +157,8 @@ The log entry shows:
 
 This corresponds to the successful brute force attack from 65.2.161.68 identified in Questions 1-2. 
 
-
-5. **The attacker added a new user as part of their persistence strategy on the server and gave this new user account higher privileges. What is the name of this account?**
+#### Question 5
+**The attacker added a new user as part of their persistence strategy on the server and gave this new user account higher privileges. What is the name of this account?**
 
 
 *Methodology:*
@@ -191,8 +190,8 @@ Answer: cyberjunkie
 Analysis:
 By creating a user account with sudo privileges, the attacker ensured they could maintain admin access even if the compromised root password was changed. This is a classic persistence technique-creating a "backdoor" account with elevated privilges. 
 
-
-6. **What is the MITRE ATT&CK sub-technique ID used for persistence by creating a new account?**
+#### Question 6
+**What is the MITRE ATT&CK sub-technique ID used for persistence by creating a new account?**
 
 At this point, a new user account was created as a method of achieving persistence. Per, https://attack.mitre.org/, there are three sub-techniques  Persistence > Create Account: Local, Domain and Cloud. The account "cyberjunkie" was created using the local useradd command, per evidence: 
 
@@ -219,6 +218,7 @@ At this point, a new user account was created as a method of achieving persisten
 
 Answer: T1136.001
 
+#### Question 7
 **What time did the attacker's first SSH session end according to auth.log?**
 
 **Methodlogy:**
@@ -245,7 +245,7 @@ Session 37 Duration: 06:32:44 - 06:37:24 (approximately 4 minutes 40 seconds)
 - Executed post-exploitation commands (Question 8)
 - Cleanly disconnected at 06:37:24
   
-  
+#### Question 8
 **The attacker logged into their backdoor account and utilized their higher privileges to download a script. What is the full command executed using sudo?**
 
 **Methodology:**
