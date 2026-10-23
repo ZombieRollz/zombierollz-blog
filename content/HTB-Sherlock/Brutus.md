@@ -1,4 +1,5 @@
-
+https://app.hackthebox.com/sherlocks/Brutus
+Created by: CyberJunkie
 ## Scenario:
 
 A brute-force attack hit an SSH service, and the attacker eventually guessed the `root` password. After logging in interactively, they established a shell session, created a new local user for persistence, added that user to the sudo group, and then used elevated privileges to download a script from GitHub for further activity.
@@ -287,4 +288,4 @@ The attacker used curl to download a linux privilege escalation/persistence scri
 
 
 *Forensic Significance*:
-This command represents the final stage of the attack-deploying post-exploitation tools to deepen system compromise and ensure persistent access. 
+This command represents the final stage of the attack. The attacker deployed post-exploitation tools to deepen system compromise and ensure persistent access. 
