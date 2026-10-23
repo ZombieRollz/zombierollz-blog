@@ -1,5 +1,5 @@
 https://app.hackthebox.com/sherlocks/Brutus
-Created by: CyberJunkie
+Sherlock created by: CyberJunkie
 ## Scenario:
 
 A brute-force attack hit an SSH service, and the attacker eventually guessed the `root` password. After logging in interactively, they established a shell session, created a new local user for persistence, added that user to the sudo group, and then used elevated privileges to download a script from GitHub for further activity.
