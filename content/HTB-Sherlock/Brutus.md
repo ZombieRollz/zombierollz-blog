@@ -64,14 +64,14 @@ To identify for brute force attacker's IP address, I analyzed the auth.log for r
 # Step 1: Find all failed attempts
 grep "Failed password\|invalid user" auth.log | head
 
-# Step 2: Extract just the IPs
+# Step 2: Extract just the IPs if needed to compare
 grep "Failed password\|invalid user" auth.log | grep -oP '(?<=from )\S+' | head
 
 # Step 3: Count and sort
 grep "Failed password\|invalid user" auth.log | grep -oP '(?<=from )\S+' | sort | uniq -c | sort -rn
 ```
 
-Step 3 command:
+**Step 3** command breakdown:
 1. Filters auth.log for failed login attempts
 2. Extracts IP address using regex pattern matching
 3. Counts occurrences of each IP
