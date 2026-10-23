@@ -1,31 +1,39 @@
 
-## Scenario
+## Scenario:
 
 A brute-force attack hit an SSH service, and the attacker eventually guessed the `root` password. After logging in interactively, they established a shell session, created a new local user for persistence, added that user to the sudo group, and then used elevated privileges to download a script from GitHub for further activity.
 
-## Artificats provided
+## Artificats provided:
 
 Via `sha256sum Brutus.zip`, dd7742375a19b6ccc4323058224460a5220c43d4e9f7565b653bd369b8c46b2d 
 
-## Skills learned
+## Skills learned:
 
 - Unix Log Analysis
 - wtmp analysis
 
-## Initial Analysis
+## Initial Analysis:
 
 The two artifacts that are provided are the auth logs and WTMP output. 
 
-###### auth.log
+##### auth.log:
+
+auth.log is a plain-text authentication log on Unix/Linux systems that records security-related events such as SSH logins, failed password attempts, user creation, privilege changes, and sudo command execution.
+
+- It is commonly used in DFIR to trace brute-force activity, successful logins, privilege escalation, persistence, and post-exploitation actions.
+    - You can inspect it with tools like `cat`, `grep`, `less`, or `awk`
+    - Common filters include `Failed password`, `Accepted password`, `useradd`, `usermod`, `sudo`, and `COMMAND`
 
 
+##### **wtmp**
 
-- `wtmp` is a binary log file that records all login and logout sessions on Unix/Linux system, as well as system reboots and failed logins. 
-	- This comes in a binary format, so you must use the last `tool` to display the login/logout history
-		- `last -f /var/log/wtmp`
+wtmp is a binary log file that records all login and logout sessions on Unix/Linux system, as well as system reboots and failed logins. 
+- This comes in a binary format, so you must use the last `tool` to display the login/logout history `last -f /var/log/wtmp`-
+- You can also view it in different ways, via python3, which you will see shortly.	  
+	
 
 
-## Tools utilized
+## Tools utilized:
 
 - 7z
 - python3
@@ -49,7 +57,7 @@ python3 utmp.py -o wtmp.out wtmp
 ![[Pasted image 20261022120158.png]]
 
 ![[Pasted image 20261022120159.png]]
-## Analyzing auth.log
+## Analyzing auth.log:
 
 When using the cat command against the auth.logs, a lot of information is given. 
 
