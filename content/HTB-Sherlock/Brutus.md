@@ -25,7 +25,7 @@ auth.log is a plain-text authentication log on Unix/Linux systems that records s
     - Common filters include `Failed password`, `Accepted password`, `useradd`, `usermod`, `sudo`, and `COMMAND`
 
 
-##### **wtmp**
+##### **wtmp**:
 
 wtmp is a binary log file that records all login and logout sessions on Unix/Linux system, as well as system reboots and failed logins. 
 - This comes in a binary format, so you must use the last `tool` to display the login/logout history `last -f /var/log/wtmp`-
@@ -59,12 +59,12 @@ python3 utmp.py -o wtmp.out wtmp
 ![[Pasted image 20261022120159.png]]
 ## Analyzing auth.log:
 
-When using the cat command against the auth.logs, a lot of information is given. 
+When using the cat command against the auth.logs, a lot of information is given. Linux commands will come in handy while trying to navigate through everything to get the answers I need.
 
 ![[Pasted image 20261022120209.png]]
 
-#### Question 1
-**Analyze the auth.log. What is the IP address used by the attacker to carry out a brute force attack?**
+#### Question 1:
+##### Analyze the auth.log. What is the IP address used by the attacker to carry out a brute force attack?
 
 To identify for brute force attacker's IP address, I analyzed the auth.log for repeated failed authentication attempts using the following commands:
 
@@ -85,14 +85,28 @@ grep "Failed password\|invalid user" auth.log | grep -oP '(?<=from )\S+' | sort 
 3. Counts occurrences of each IP
 4. Sorts by frequency to identify the source of the brute force attack
 
-**Result**:
+
+*Methodology*:  
+I searched `auth.log` for repeated failed SSH authentication attempts, focusing on the patterns `Failed password` and `invalid user`. To isolate the source address, I extracted the IP following `from`, then counted occurrences to see which address appeared most often.
+
+
+Result:
+The repeated failed logins all point to the same source IP: `65.2.161.68`.
 
 ![[Pasted image 20261022120222.png]]
 
-#### Question 2
-**The bruteforce attempts were successful and attacker gained access to an account on the server. What is the username of the account?**
+
+Answer:  
+`65.2.161.68`
+
+Analysis:  
+A brute-force attack produces many rapid failures from one host, usually against multiple usernames or passwords. In this log, the high volume of `Failed password` / `invalid user` entries from a single IP is the clearest indicator of automated password guessing. That source stands out as the attacker’s origin.
+
+
+#### Question 2:
+##### The bruteforce attempts were successful and attacker gained access to an account on the server. What is the username of the account?
    
-**Methodology**:
+Methodology:
 To identify successful authentications from the attacker's IP(65.2.161.68), I searched for "Accepted password" entries in auth.log and filtered by the attacker's IP.
 
 grep "Accepted password" auth.log | grep "65.2.161.68" | grep -oP '(?<=for )\S+' | sort | uniq -c | sort -rn
